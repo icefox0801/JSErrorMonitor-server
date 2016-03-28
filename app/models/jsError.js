@@ -1,5 +1,8 @@
+'use strict';
+
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var moment = require('moment');
 
 var JSErrorSchema = new Schema({
   message: {
@@ -96,15 +99,17 @@ var JSErrorSchema = new Schema({
     type: Number,
     default: 0
   },
-  achievedId: {
+  archiveId: {
     type: String,
     default: ''
   },
-  achieved: [{
+  archive: [{
     type: Schema.Types.ObjectId,
     ref: 'JSError'
   }]
 });
+
+JSErrorSchema.set('toObject', { getters: true });
 
 var JSError = mongoose.model('JSError', JSErrorSchema);
 

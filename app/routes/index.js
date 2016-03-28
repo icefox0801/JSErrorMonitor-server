@@ -11,8 +11,13 @@ router.get('/', function(req, res) {
 });
 
 /* GET error list page */
+router.get('/api/error/list/most', API.error.listMost);
+router.get('/api/error/list/latest', API.error.listLatest);
 router.get('/api/error/list/all', API.error.listAll);
-router.get('/api/error/list/achieve', API.error.listAchieve);
+router.get('/api/error/list/archive', API.error.listArchive);
+
+/* GET charts */
+router.get('/api/chart/error/trend', API.chart.errorTrend);
 
 /* Error Collect API */
 router.get('/collect/e.gif', API.collectError);

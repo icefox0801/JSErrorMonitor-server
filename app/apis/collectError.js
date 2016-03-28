@@ -38,7 +38,7 @@ module.exports = function (req, res) {
     },
     stack: stackInfo,
     userAgent: req.headers['user-agent'],
-    url: req.headers['referrer'],
+    url: req.headers['referer'],
     ip: ip,
     date: new Date()
   });
