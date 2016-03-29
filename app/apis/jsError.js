@@ -65,7 +65,7 @@ function listArchive (req, res) {
     $group: {
       _id: {
         message: '$message',
-        url: '$sUrl'
+        url: '$url'
       },
       count: {
         $sum: 1
