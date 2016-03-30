@@ -25,39 +25,51 @@ function listMost (req, res) {
 function listLatest (req, res) {
   var promise = JSError.mapReduce(archiveMapReduce);
 
-  promise.then(function (data) {
-    res.end(JSON.stringify({
-      status: 0,
-      message: 'ok',
-      result: _.take(data.sort((x, y) => y.value.latest - x.value.latest), 10)
-    }));
-  }).then(function (err) {
-    res.end(JSON.stringify({
-      status: -1,
-      message: err.message,
-      result: null
-    }));
-  });
+  promise.then(data => res.end(JSON.stringify({
+    status: 0,
+    message: 'ok',
+    result: _.take(data.sort((x, y) => y.value.latest - x.value.latest), 10)
+  })), err => res.end(JSON.stringify({
+    status: -1,
+    message: err.message,
+    result: null
+  })));
+
 }
 
 function listAll (req, res) {
-  var query = JSError.find().sort({
-    date: -1
-  }).limit(20);
 
-  query.exec().then(function (jsErrors) {
+  var page = req.params.page;
+  var pageSize = 20;
+
+  var queryData = JSError.find().sort({
+    date: -1
+  }).skip(pageSize * (page - 1)).limit(pageSize);
+
+  var queryCount = JSError.count({url: ''});
+
+  Promise.all([queryData.exec(), queryCount.exec()]).then(out => {
+
+    var jsErrors = out[0];
+    var count = out[1];
+    var meta = {};
+
+    meta.total = Math.ceil(count / pageSize);
+    meta.current = req.params.page;
+    meta.pageSize = pageSize;
+
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
-      result: jsErrors
+      result: jsErrors,
+      meta: meta
     }));
-  }).then(function (err) {
-    res.end(JSON.stringify({
-      status: -1,
-      message: err.message,
-      result: null
-    }));
-  });
+  }, err => res.end(JSON.stringify({
+    status: -1,
+    message: err.message,
+    result: null
+  })));
+
 }
 
 function listArchive (req, res) {
@@ -94,6 +106,34 @@ function listArchive (req, res) {
 }
 
 function listBrowser (req, res) {
+  var query = JSError.aggregate([{
+    $group: {
+      _id: {
+        name: '$browser.name'
+      },
+      count: {
+        $sum: 1
+      },
+      min: {
+        $min: '$browser.version'
+      },
+      max: {
+        $max: '$browser.version'
+      }
+    }
+  }, {
+    $sort: {
+      count: -1
+    }
+  }]);
+
+  query.exec().then(function (data) {
+    res.end(JSON.stringify({
+      status: 0,
+      message: 'ok',
+      result: data
+    }));
+  });
 }
 
 module.exports = {
