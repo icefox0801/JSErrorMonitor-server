@@ -40,13 +40,18 @@ function listLatest (req, res) {
 function listAll (req, res) {
 
   var page = req.params.page;
-  var pageSize = 20;
+  var pageSize = parseInt(req.body.pageSize, 10) || 20;
+  var timeRange = parseInt(req.body.timeRange, 10) || 168;
 
-  var queryData = JSError.find().sort({
-    date: -1
-  }).skip(pageSize * (page - 1)).limit(pageSize);
+  var queryData = JSError.find()
+    .where('date').gte(moment().subtract(timeRange, 'h').toDate())
+    .sort({ date: -1 })
+    .skip(pageSize * (page - 1))
+    .limit(pageSize);
 
-  var queryCount = JSError.count({url: ''});
+  var queryCount = JSError.find()
+    .where('date').gte(moment().subtract(timeRange, 'h').toDate())
+    .count();
 
   Promise.all([queryData.exec(), queryCount.exec()]).then(out => {
 
