@@ -3,9 +3,13 @@ const JSError = require('../models/jsError');
 const _ = require('lodash');
 const moment = require('moment');
 const archiveMapReduce = require('./mapReduce/archive');
+const getGlobalCondition = require('./utils/getGlobalCondition');
 
 function listMost (req, res) {
-  var promise = JSError.mapReduce(archiveMapReduce);
+  var queryOptions = getGlobalCondition(req.body);
+  var promise = JSError.mapReduce(archiveMapReduce({
+    query: queryOptions
+  }));
 
   promise.then(function (data) {
     res.end(JSON.stringify({
@@ -14,6 +18,7 @@ function listMost (req, res) {
       result: _.take(data.sort((x, y) => y.value.count - x.value.count), 10)
     }));
   }).then(function (err) {
+    res.writeHead(500);
     res.end(JSON.stringify({
       status: -1,
       message: err.message,
@@ -23,7 +28,10 @@ function listMost (req, res) {
 }
 
 function listLatest (req, res) {
-  var promise = JSError.mapReduce(archiveMapReduce);
+  var queryOptions = getGlobalCondition(req.body);
+  var promise = JSError.mapReduce(archiveMapReduce({
+    query: queryOptions
+  }));
 
   promise.then(data => res.end(JSON.stringify({
     status: 0,
@@ -42,14 +50,25 @@ function listAll (req, res) {
   var page = req.params.page;
   var pageSize = parseInt(req.body.pageSize, 10) || 20;
   var timeRange = parseInt(req.body.timeRange, 10) || 168;
+  var browser = req.body.browser || 'all';
+  var os = req.body.os || 'all';
+  var browserRegex = new RegExp('^' + (browser === 'all' ? '.*' : browser) + '$' ,'i');
+  var osRegex = new RegExp('^' + (os === 'all' ? '.*' : os) + '$', 'i');
 
   var queryData = JSError.find()
+    .select('_id message browser os date status')
     .where('date').gte(moment().subtract(timeRange, 'h').toDate())
+    .where('browser.name').regex(browserRegex)
+    .where('os.name').regex(osRegex)
     .sort({ date: -1 })
     .skip(pageSize * (page - 1))
     .limit(pageSize);
 
   var queryCount = JSError.find()
+    .select('_id message browser os date')
+    .where('date').gte(moment().subtract(timeRange, 'h').toDate())
+    .where('browser.name').regex(browserRegex)
+    .where('os.name').regex(osRegex)
     .where('date').gte(moment().subtract(timeRange, 'h').toDate())
     .count();
 
@@ -59,6 +78,7 @@ function listAll (req, res) {
     var count = out[1];
     var meta = {};
 
+    meta.count = count;
     meta.total = Math.ceil(count / pageSize);
     meta.current = req.params.page;
     meta.pageSize = pageSize;

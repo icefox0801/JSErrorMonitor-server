@@ -32,7 +32,6 @@ function reduce(k, vals) {
   }
 }
 
-module.exports = {
-  map,
-  reduce
+module.exports = function (options) {
+  return Object.assign({}, { map, reduce }, options)
 };

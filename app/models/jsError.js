@@ -91,6 +91,10 @@ var JSErrorSchema = new Schema({
     type: String,
     default: 'PC'
   },
+  business: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
     default: 'open'

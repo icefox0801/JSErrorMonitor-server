@@ -10,8 +10,8 @@ router.get('/', function(req, res) {
 });
 
 /* GET error list page */
-router.get('/api/error/list/most', API.error.listMost);
-router.get('/api/error/list/latest', API.error.listLatest);
+router.post('/api/error/list/most', API.error.listMost);
+router.post('/api/error/list/latest', API.error.listLatest);
 router.post('/api/error/list/all/:page', API.error.listAll);
 router.post('/api/error/list/archive/:page', API.error.listArchive);
 router.post('/api/error/list/browser/:page', API.error.listBrowser);

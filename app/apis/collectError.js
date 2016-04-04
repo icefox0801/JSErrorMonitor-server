@@ -7,7 +7,7 @@ var requestIp = require('request-ip');
 module.exports = function (req, res) {
   var params = req.query;
   var agent = useragent.parse(req.headers['user-agent']);
-  var stackInfo = stacky.parse(params.s);
+  var stackInfo = (params.s !== 'undefined') && stacky.parse(params.s);
   var ip = requestIp.getClientIp(req);
 
   res.writeHeader(200, {
