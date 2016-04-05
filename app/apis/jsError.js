@@ -4,6 +4,7 @@ const _ = require('lodash');
 const moment = require('moment');
 const archiveMapReduce = require('./mapReduce/archive');
 const getGlobalCondition = require('./utils/getGlobalCondition');
+const queryCondition = require('./utils/queryCondition');
 
 function listMost (req, res) {
   var queryOptions = getGlobalCondition(req.body);
@@ -46,30 +47,16 @@ function listLatest (req, res) {
 }
 
 function listAll (req, res) {
-
   var page = req.params.page;
   var pageSize = parseInt(req.body.pageSize, 10) || 20;
-  var timeRange = parseInt(req.body.timeRange, 10) || 168;
+  var params = req.body;
   var browser = req.body.browser || 'all';
-  var os = req.body.os || 'all';
-  var browserRegex = new RegExp('^' + (browser === 'all' ? '.*' : browser) + '$' ,'i');
-  var osRegex = new RegExp('^' + (os === 'all' ? '.*' : os) + '$', 'i');
-
-  var queryData = JSError.find()
-    .select('_id message browser os date status')
-    .where('date').gte(moment().subtract(timeRange, 'h').toDate())
-    .where('browser.name').regex(browserRegex)
-    .where('os.name').regex(osRegex)
+  var queryData = queryCondition(JSError.find().select('_id message browser os date status'), params)
     .sort({ date: -1 })
     .skip(pageSize * (page - 1))
     .limit(pageSize);
 
-  var queryCount = JSError.find()
-    .select('_id message browser os date')
-    .where('date').gte(moment().subtract(timeRange, 'h').toDate())
-    .where('browser.name').regex(browserRegex)
-    .where('os.name').regex(osRegex)
-    .where('date').gte(moment().subtract(timeRange, 'h').toDate())
+  var queryCount = queryCondition(JSError.find(), params)
     .count();
 
   Promise.all([queryData.exec(), queryCount.exec()]).then(out => {
