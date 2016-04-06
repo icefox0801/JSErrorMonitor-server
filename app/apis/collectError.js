@@ -34,7 +34,7 @@ module.exports = function (req, res) {
     },
     browser: {
       name: agent.family,
-      version: agent.os.toVersion()
+      version: agent.toVersion()
     },
     stack: stackInfo,
     userAgent: req.headers['user-agent'],

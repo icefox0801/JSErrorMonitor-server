@@ -1,19 +1,24 @@
 'use strict';
 var moment = require('moment');
 
+function buildRegex (str) {
+  return new RegExp('^' + (str === 'all' ? '.*' : str) + '$' ,'i');
+}
+
 module.exports = function (params) {
   var timeRange = parseInt(params.timeRange, 10) || 168;
-  var browser = params.browser || 'all';
-  var os = params.os || 'all';
-  var business = params.business || 'all';
-  var browserRegex = new RegExp('^' + (browser === 'all' ? '.*' : browser) + '$' ,'i');
-  var osRegex = new RegExp('^' + (os === 'all' ? '.*' : os) + '$', 'i');
-  var businessRegex = new RegExp('^' + (business === 'all' ? '.*' : os) + '$', 'i');
-  var platform = params.platform || 'PC';
-  var platformRegex = new RegExp('^' + platform + '$', 'i');
+  var browserRegex = buildRegex(params.browser || 'all');
+  var osRegex = buildRegex(params.os || 'all');
+  var businessRegex = buildRegex(params.business || 'all');
+  var statusRegex = buildRegex(params.status || 'all');
+  var keywordRegex = new RegExp(params.keyword || '.*', 'i');
+  var platformRegex = buildRegex(params.platform || 'PC');
   return {
     platform: {
       $regex: platformRegex
+    },
+    status: {
+      $regex: statusRegex
     },
     $or: [
       {business: {$regex: businessRegex}},
@@ -21,6 +26,9 @@ module.exports = function (params) {
     ],
     date: {
       $gte: moment().subtract(timeRange, 'h').toDate()
+    },
+    message: {
+      $regex: keywordRegex
     }
   };
 };

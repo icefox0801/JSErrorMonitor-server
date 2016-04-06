@@ -3,8 +3,11 @@ const JSError = require('../models/jsError');
 const _ = require('lodash');
 const moment = require('moment');
 const archiveMapReduce = require('./mapReduce/archive');
+const browserMapReduce = require('./mapReduce/browser');
+const osMapReduce = require('./mapReduce/os');
 const getGlobalCondition = require('./utils/getGlobalCondition');
 const queryCondition = require('./utils/queryCondition');
+const groupResults = require('./utils/groupResults');
 
 function listMost (req, res) {
   var queryOptions = getGlobalCondition(req.body);
@@ -12,13 +15,20 @@ function listMost (req, res) {
     query: queryOptions
   }));
 
-  promise.then(function (data) {
+  promise.then(data => {
+    var result = _.chain(data).sortBy('value.count').reverse().take(10).map(archive => ({
+      message: archive._id.message,
+      url: archive._id.url,
+      count: archive.value.count,
+      earliest: archive.value.earliest,
+      latest: archive.value.latest
+    })).value();
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
-      result: _.take(data.sort((x, y) => y.value.count - x.value.count), 10)
+      result
     }));
-  }).then(function (err) {
+  }, err => {
     res.writeHead(500);
     res.end(JSON.stringify({
       status: -1,
@@ -34,15 +44,27 @@ function listLatest (req, res) {
     query: queryOptions
   }));
 
-  promise.then(data => res.end(JSON.stringify({
-    status: 0,
-    message: 'ok',
-    result: _.take(data.sort((x, y) => y.value.latest - x.value.latest), 10)
-  })), err => res.end(JSON.stringify({
-    status: -1,
-    message: err.message,
-    result: null
-  })));
+  promise.then(data => {
+    var result = _.chain(data).sortBy('value.latest').reverse().take(10).map(archive => ({
+      message: archive._id.message,
+      url: archive._id.url,
+      count: archive.value.count,
+      earliest: archive.value.earliest,
+      latest: archive.value.latest
+    })).value();
+    res.end(JSON.stringify({
+      status: 0,
+      message: 'ok',
+      result
+    }));
+  }, err => {
+    res.writeHead(500);
+    res.end(JSON.stringify({
+      status: -1,
+      message: err.message,
+      result: null
+    }));
+  });
 
 }
 
@@ -50,7 +72,6 @@ function listAll (req, res) {
   var page = req.params.page;
   var pageSize = parseInt(req.body.pageSize, 10) || 20;
   var params = req.body;
-  var browser = req.body.browser || 'all';
   var queryData = queryCondition(JSError.find().select('_id message browser os date status'), params)
     .sort({ date: -1 })
     .skip(pageSize * (page - 1))
@@ -60,7 +81,6 @@ function listAll (req, res) {
     .count();
 
   Promise.all([queryData.exec(), queryCount.exec()]).then(out => {
-
     var jsErrors = out[0];
     var count = out[1];
     var meta = {};
@@ -74,76 +94,102 @@ function listAll (req, res) {
       status: 0,
       message: 'ok',
       result: jsErrors,
-      meta: meta
+      meta
     }));
-  }, err => res.end(JSON.stringify({
-    status: -1,
-    message: err.message,
-    result: null
-  })));
+  }, err => {
+    res.end(JSON.stringify({
+      status: -1,
+      message: err.message,
+      result: null
+    }))
+  });
 
 }
 
 function listArchive (req, res) {
-  var query = JSError.aggregate([{
-    $group: {
-      _id: {
-        message: '$message',
-        url: '$url'
-      },
-      count: {
-        $sum: 1
-      },
-      earliest: {
-        $min: '$date'
-      },
-      latest: {
-        $max: '$date'
-      }
-    }
-  }, {
-    $sort: {
-      count: -1,
-      latest: 1
-    }
-  }]);
+  var page = req.params.page;
+  var pageSize = parseInt(req.body.pageSize, 10) || 20;
+  var startIndex = (page - 1) * pageSize;
+  var endIndex = page * pageSize;
+  var queryOptions = getGlobalCondition(req.body);
+  var promise = JSError.mapReduce(archiveMapReduce({
+    query: queryOptions
+  }));
 
-  query.exec().then(function (data) {
+  promise.then( data => {
+    var result = _.chain(data).sortBy('value.count').reverse().slice(startIndex, endIndex).map(archive => ({
+      message: archive._id.message,
+      url: archive._id.url,
+      status: archive._id.status,
+      count: archive.value.count,
+      earliest: archive.value.earliest,
+      latest: archive.value.latest
+    })).value();
+
+    var meta = {};
+    meta.count = data.length;
+    meta.total = Math.ceil(meta.count / pageSize);
+    meta.current = page;
+    meta.pageSize = pageSize;
+
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
-      result: data
+      result, meta
     }));
+  }, err => {
+    res.end(JSON.stringify({
+      status: -1,
+      message: err.message,
+      result: null
+    }))
   });
 }
 
 function listBrowser (req, res) {
-  var query = JSError.aggregate([{
-    $group: {
-      _id: {
-        name: '$browser.name'
-      },
-      count: {
-        $sum: 1
-      },
-      min: {
-        $min: '$browser.version'
-      },
-      max: {
-        $max: '$browser.version'
-      }
-    }
-  }, {
-    $sort: {
-      count: -1
-    }
-  }]);
+  var queryOptions = getGlobalCondition(req.body);
+  var promise = JSError.mapReduce(browserMapReduce({
+    query: queryOptions
+  }));
 
-  query.exec().then(function (data) {
+  promise.then(data => {
+    var result = groupResults(data);
+    var meta = { count: result.length };
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
-      result: data
+      result, meta
+    }));
+  }, err => {
+    res.writeHead(500);
+    res.end(JSON.stringify({
+      status: -1,
+      message: err.message,
+      result: null
+    }));
+  });
+}
+
+function listOS (req, res) {
+  var queryOptions = getGlobalCondition(req.body);
+  var promise = JSError.mapReduce(osMapReduce({
+    query: queryOptions
+  }));
+
+  promise.then(data => {
+    var result = groupResults(data);
+    var meta = { count: result.length };
+    res.end(JSON.stringify({
+      status: 0,
+      message: 'ok',
+      result, meta
+    }));
+  }, err => {
+    res.writeHead(500);
+    res.end(JSON.stringify({
+      status: -1,
+      message: err.message,
+      result: null
     }));
   });
 }
@@ -153,5 +199,6 @@ module.exports = {
   listLatest: listLatest,
   listAll: listAll,
   listArchive: listArchive,
-  listBrowser: listBrowser
+  listBrowser: listBrowser,
+  listOS: listOS
 };

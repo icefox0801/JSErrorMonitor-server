@@ -3,7 +3,8 @@
 function map() {
   emit({
     message: this.message,
-    url: this.url
+    url: this.url,
+    status: this.status
   }, {
     count: 1,
     earliest: this.date.getTime(),
