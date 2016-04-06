@@ -7,7 +7,7 @@ module.exports = function (data) {
     name: item._id.name,
     version: item._id.version,
     count: item.value.count
-  })).groupBy(type => type.name).value();
+  })).groupBy('name').value();
 
   _.each(resultMap, (value, key) => {
     var count = _.sumBy(value, 'count');

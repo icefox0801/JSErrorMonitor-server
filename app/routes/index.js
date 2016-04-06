@@ -14,6 +14,7 @@ router.post('/api/error/list/most', API.error.listMost);
 router.post('/api/error/list/latest', API.error.listLatest);
 router.post('/api/error/list/all/:page', API.error.listAll);
 router.post('/api/error/list/archive/:page', API.error.listArchive);
+router.post('/api/error/list/page/:page', API.error.listPage);
 router.post('/api/error/list/browser/', API.error.listBrowser);
 router.post('/api/error/list/os/', API.error.listOS);
 
