@@ -1,8 +1,9 @@
-"use strict";
-var JSError = require('../models/jsError');
-var useragent = require('useragent');
-var stacky = require('stacky');
-var requestIp = require('request-ip');
+'use strict';
+const JSErrorModel = require('../models/jsError');
+const ArchiveModel = require('../models/archive');
+const useragent = require('useragent');
+const stacky = require('stacky');
+const requestIp = require('request-ip');
 
 module.exports = function (req, res) {
   var params = req.query;
@@ -17,7 +18,7 @@ module.exports = function (req, res) {
 
   res.end();
 
-  var jsError = new JSError({
+  var jsError = new JSErrorModel({
     message: params.m,
     file: {
       path: params.su,
@@ -25,16 +26,23 @@ module.exports = function (req, res) {
       line: params.ln
     },
     device: {
+      name: agent.device.toString(),
       width: params.w,
       height: params.h
     },
     os: {
-      name: agent.os.family,
-      version: agent.os.toVersion()
+      family: agent.os.family,
+      version: agent.os.toVersion(),
+      major: agent.os.major,
+      minor: agent.os.minor,
+      patch: agent.os.patch
     },
     browser: {
-      name: agent.family,
-      version: agent.toVersion()
+      family: agent.family,
+      version: agent.toVersion(),
+      major: agent.major,
+      minor: agent.minor,
+      patch: agent.patch
     },
     stack: stackInfo,
     userAgent: req.headers['user-agent'],
@@ -43,6 +51,42 @@ module.exports = function (req, res) {
     date: new Date()
   });
 
-  jsError.save(function (err) {});
+  jsError.save((err, jsErrorDoc) => {
+    var id = jsErrorDoc.id;
+    var message = jsErrorDoc.message;
+    var url = jsErrorDoc.url;
+    var date = jsErrorDoc.date;
+    var business = jsErrorDoc.business;
+
+    var query = ArchiveModel.find({
+      url,
+      message,
+      status: 'open'
+    });
+
+    query.exec().then(archiveDocs => {
+      var archive;
+      if(archiveDocs.length === 0) {
+        archive = new ArchiveModel({
+          url,
+          message,
+          business,
+          earliest: date
+        });
+      } else {
+        archive = archiveDocs[0];
+      }
+
+      archive.jsErrors.unshift(id);
+      archive.set('latest', date);
+      archive.set('business', business);
+      archive.save((err, archiveDoc) => {
+        jsErrorDoc.set('archiveId', archiveDoc.id);
+        jsErrorDoc.save();
+      });
+
+    }, err => {});
+
+  });
 
 };

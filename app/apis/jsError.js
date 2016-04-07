@@ -1,29 +1,26 @@
 'use strict';
-const JSError = require('../models/jsError');
+const JSErrorModel = require('../models/jsError');
+const ArchiveModel = require('../models/archive');
 const _ = require('lodash');
 const moment = require('moment');
 const archiveMapReduce = require('./mapReduce/archive');
 const pageMapReduce = require('./mapReduce/page');
 const browserMapReduce = require('./mapReduce/browser');
 const osMapReduce = require('./mapReduce/os');
-const getGlobalCondition = require('./utils/getGlobalCondition');
+const getJSErrorCondition = require('./utils/getJSErrorCondition');
+const getArchiveCondition = require('./utils/getArchiveCondition');
 const queryCondition = require('./utils/queryCondition');
 const groupResults = require('./utils/groupResults');
 
 function listMost (req, res) {
-  var queryOptions = getGlobalCondition(req.body);
-  var promise = JSError.mapReduce(archiveMapReduce({
-    query: queryOptions
-  }));
+  var query = ArchiveModel.find(getArchiveCondition(req.body))
+    .select('_id message url status jsErrors earliest latest');
 
-  promise.then(data => {
-    var result = _.chain(data).sortBy('value.count').reverse().take(10).map(archive => ({
-      message: archive._id.message,
-      url: archive._id.url,
-      count: archive.value.count,
-      earliest: archive.value.earliest,
-      latest: archive.value.latest
-    })).value();
+  query.exec().then(data => {
+    var result = _.chain(data)
+      .map(archiveModel => _.chain(archiveModel.toJSON()).set('count', archiveModel.jsErrors.length).omit('jsErrors').value())
+      .sortBy(['count', 'latest']).reverse().take(10).value();
+
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
@@ -40,19 +37,13 @@ function listMost (req, res) {
 }
 
 function listLatest (req, res) {
-  var queryOptions = getGlobalCondition(req.body);
-  var promise = JSError.mapReduce(archiveMapReduce({
-    query: queryOptions
-  }));
+  var query = ArchiveModel.find(getArchiveCondition(req.body))
+    .select('_id message url status jsErrors earliest latest');
 
-  promise.then(data => {
-    var result = _.chain(data).sortBy('value.latest').reverse().take(10).map(archive => ({
-      message: archive._id.message,
-      url: archive._id.url,
-      count: archive.value.count,
-      earliest: archive.value.earliest,
-      latest: archive.value.latest
-    })).value();
+  query.exec().then(data => {
+    var result = _.chain(data)
+      .map(archiveModel => _.chain(archiveModel.toJSON()).set('count', archiveModel.jsErrors.length).omit('jsErrors').value())
+      .sortBy(['latest', 'count']).reverse().take(10).value();
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
@@ -73,13 +64,12 @@ function listAll (req, res) {
   var page = req.params.page;
   var pageSize = parseInt(req.body.pageSize, 10) || 20;
   var params = req.body;
-  var queryData = queryCondition(JSError.find().select('_id message browser os date status'), params)
+  var queryData = queryCondition(JSErrorModel.find().select('_id message browser os date status'), params)
     .sort({ date: -1 })
     .skip(pageSize * (page - 1))
     .limit(pageSize);
 
-  var queryCount = queryCondition(JSError.find(), params)
-    .count();
+  var queryCount = queryCondition(JSErrorModel.find(), params).count();
 
   Promise.all([queryData.exec(), queryCount.exec()]).then(out => {
     var jsErrors = out[0];
@@ -112,20 +102,14 @@ function listArchive (req, res) {
   var pageSize = parseInt(req.body.pageSize, 10) || 20;
   var startIndex = (page - 1) * pageSize;
   var endIndex = page * pageSize;
-  var queryOptions = getGlobalCondition(req.body);
-  var promise = JSError.mapReduce(archiveMapReduce({
-    query: queryOptions
-  }));
 
-  promise.then( data => {
-    var result = _.chain(data).sortBy('value.count').reverse().slice(startIndex, endIndex).map(archive => ({
-      message: archive._id.message,
-      url: archive._id.url,
-      status: archive._id.status,
-      count: archive.value.count,
-      earliest: archive.value.earliest,
-      latest: archive.value.latest
-    })).value();
+  var query = ArchiveModel.find(getArchiveCondition(req.body))
+    .select('_id message url status jsErrors earliest latest');
+
+  query.exec().then( data => {
+    var result = _.chain(data)
+      .map(archiveModel => _.chain(archiveModel.toJSON()).set('count', archiveModel.jsErrors.length).omit('jsErrors').value())
+      .sortBy(['count', 'latest']).reverse().slice(startIndex, endIndex).value();
 
     var meta = {};
     meta.count = data.length;
@@ -152,20 +136,20 @@ function listPage (req, res) {
   var pageSize = parseInt(req.body.pageSize, 10) || 20;
   var startIndex = (page - 1) * pageSize;
   var endIndex = page * pageSize;
-  var queryOptions = getGlobalCondition(req.body);
-  var promise = JSError.mapReduce(pageMapReduce({
-    query: queryOptions
-  }));
+  var query = ArchiveModel.find(getArchiveCondition(req.body))
+    .select('_id message url status jsErrors earliest latest');
 
-  promise.then( data => {
-    var resultMap = _.chain(data).groupBy('_id.url').value();
+  query.exec().then( data => {
+    var resultMap = _.chain(data).each(archive => {
+      _.set(archive, 'count', archive.jsErrors.length);
+    }).groupBy('url').value();
     _.each(resultMap, (value, key) => {
       _.set(resultMap, key, {
         url: key,
-        count: _.sumBy(value, 'value.count'),
-        earliest: _.minBy(value, 'value.earliest').value.earliest,
-        latest: _.maxBy(value, 'value.latest').value.latest,
-        archive: _.keys(_.countBy(value, '_id.message')).length
+        count: _.sumBy(value, 'count'),
+        earliest: _.minBy(value, 'earliest').earliest,
+        latest: _.maxBy(value, 'latest').latest,
+        archive: _.keys(_.countBy(value, 'message')).length
       });
     });
     var chainQuery = _.chain(resultMap).values().sortBy('count').reverse();
@@ -192,8 +176,8 @@ function listPage (req, res) {
 }
 
 function listBrowser (req, res) {
-  var queryOptions = getGlobalCondition(req.body);
-  var promise = JSError.mapReduce(browserMapReduce({
+  var queryOptions = getJSErrorCondition(req.body);
+  var promise = JSErrorModel.mapReduce(browserMapReduce({
     query: queryOptions
   }));
 
@@ -216,8 +200,8 @@ function listBrowser (req, res) {
 }
 
 function listOS (req, res) {
-  var queryOptions = getGlobalCondition(req.body);
-  var promise = JSError.mapReduce(osMapReduce({
+  var queryOptions = getJSErrorCondition(req.body);
+  var promise = JSErrorModel.mapReduce(osMapReduce({
     query: queryOptions
   }));
 
@@ -239,6 +223,37 @@ function listOS (req, res) {
   });
 }
 
+function detail (req, res) {
+  var id = req.params.id;
+  var query = ArchiveModel.findById(id).select('_id status latest earliest platform business url message jsErrors').populate('jsErrors', 'message url stack userAgent browser os date', null, {
+    sort: {
+      date: -1
+    },
+    limit: 10
+  });
+
+  query.exec().then(archiveModel => {
+    var abstract = {
+      message: archiveModel.message,
+      url: archiveModel.url,
+      status: archiveModel.status,
+      earliest: archiveModel.earliest,
+      latest: archiveModel.latest
+    };
+    var browsers = _.chain(archiveModel.jsErrors).groupBy('browser.family').keys();
+    var os = _.chain(archiveModel.jsErrors).groupBy('os.family').keys();
+    _.set(abstract, 'browsers', browsers);
+    _.set(abstract, 'os', os);
+    _.set(abstract, 'count', archiveModel.jsErrors.length);
+    res.end(JSON.stringify({
+      status: 0,
+      message: 'ok',
+      result: archiveModel.jsErrors,
+      abstract
+    }));
+  })
+}
+
 module.exports = {
   listMost: listMost,
   listLatest: listLatest,
@@ -246,5 +261,6 @@ module.exports = {
   listArchive: listArchive,
   listPage: listPage,
   listBrowser: listBrowser,
-  listOS: listOS
+  listOS: listOS,
+  detail: detail
 };

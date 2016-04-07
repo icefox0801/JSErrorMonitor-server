@@ -1,17 +1,17 @@
 'use strict';
-
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
-var moment = require('moment');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
 var JSErrorSchema = new Schema({
   message: {
     type: String,
-    default: ''
+    default: '',
+    required: true
   },
   userAgent: {
     type: String,
-    default: ''
+    default: '',
+    required: true
   },
   url: {
     type: String,
@@ -58,16 +58,32 @@ var JSErrorSchema = new Schema({
     default: new Date()
   },
   browser: {
-    name: {
+    family: {
       type: String,
       default: ''
     },
     version: {
       type: String,
       default: ''
+    },
+    major: {
+      type: String,
+      default: '0'
+    },
+    minor: {
+      type: String,
+      default: '0'
+    },
+    patch: {
+      type: String,
+      default: '0'
     }
   },
   device: {
+    name: {
+      type: String,
+      default: ''
+    },
     width: {
       type: Number,
       default: 0
@@ -78,39 +94,49 @@ var JSErrorSchema = new Schema({
     }
   },
   os: {
-    name: {
+    family: {
       type: String,
       default: ''
     },
     version: {
       type: String,
       default: ''
+    },
+    major: {
+      type: String,
+      default: '0'
+    },
+    minor: {
+      type: String,
+      default: '0'
+    },
+    patch: {
+      type: String,
+      default: '0'
     }
   },
   platform: {
     type: String,
-    default: 'PC'
+    default: 'PC',
+    required: true
   },
   business: {
     type: String,
-    default: ''
+    default: 'all',
+    required: true
   },
   status: {
     type: String,
-    default: 'open'
+    default: 'open',
+    required: true
   },
   flag: {
     type: Number,
     default: 0
   },
   archiveId: {
-    type: String,
-    default: ''
-  },
-  archive: [{
-    type: Schema.Types.ObjectId,
-    ref: 'JSError'
-  }]
+    type: Schema.Types.ObjectId
+  }
 });
 
 JSErrorSchema.set('toObject', { getters: true });

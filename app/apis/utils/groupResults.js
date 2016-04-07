@@ -4,17 +4,17 @@ const _ = require('lodash');
 
 module.exports = function (data) {
   var resultMap = _.chain(data).map(item => ({
-    name: item._id.name,
+    family: item._id.family,
     version: item._id.version,
     count: item.value.count
-  })).groupBy('name').value();
+  })).groupBy('family').value();
 
   _.each(resultMap, (value, key) => {
     var count = _.sumBy(value, 'count');
     var max = _.maxBy(value, 'version').version;
     var min = _.minBy(value, 'version').version;
     _.set(resultMap, key, {
-      name: key,
+      family: key,
       versions: _.sortBy(value, 'version'),
       count, max, min
     })

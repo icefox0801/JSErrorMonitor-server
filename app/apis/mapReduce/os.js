@@ -3,7 +3,7 @@
 function map() {
   emit({
     version: this.os.version,
-    name: this.os.name
+    family: this.os.family
   }, {
     count: 1
   });

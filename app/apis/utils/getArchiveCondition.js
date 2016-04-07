@@ -1,5 +1,5 @@
 'use strict';
-var moment = require('moment');
+const moment = require('moment');
 
 function buildRegex (str) {
   return new RegExp('^' + (str === 'all' ? '.*' : str) + '$' ,'i');
@@ -20,11 +20,10 @@ module.exports = function (params) {
     status: {
       $regex: statusRegex
     },
-    $or: [
-      {business: {$regex: businessRegex}},
-      {business: {$exists: false}}
-    ],
-    date: {
+    business: {
+      $regex: businessRegex
+    },
+    earliest: {
       $gte: moment().subtract(timeRange, 'h').toDate()
     },
     message: {
