@@ -1,19 +1,19 @@
 "use strict";
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var stacky = require('stacky');
+const express = require('express');
+const path = require('path');
+const favicon = require('serve-favicon');
+const logger = require('morgan');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const stacky = require('stacky');
 
-var mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
-var routes = require('./routes/index');
+const routes = require('./routes/index');
 
-var app = express();
+const app = express();
 
-var env = process.env.NODE_ENV || 'development';
+const env = process.env.NODE_ENV || 'development';
 app.locals.ENV = env;
 app.locals.ENV_DEVELOPMENT = env == 'development';
 
@@ -81,6 +81,8 @@ var connect = function () {
   };
 
   mongoose.connect(url, options);
+
+
 };
 
 connect();

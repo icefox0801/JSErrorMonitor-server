@@ -1,8 +1,13 @@
 'use strict';
 const mongoose = require('mongoose');
+const autoIncrement = require('mongoose-auto-increment');
 const Schema = mongoose.Schema;
 
-var ArchiveSchema = new Schema({
+const ArchiveSchema = new Schema({
+  orderId: {
+    type: Number,
+    default: 1
+  },
   message: {
     type: String,
     default: ''
@@ -39,6 +44,14 @@ var ArchiveSchema = new Schema({
   }
 });
 
-var Archive = mongoose.model('Archive', ArchiveSchema);
+autoIncrement.initialize(mongoose.connection);
+ArchiveSchema.plugin(autoIncrement.plugin, {
+  model: 'Archive',
+  field: 'orderId',
+  startAt: 1,
+  incrementBy: 1
+});
+
+const Archive = mongoose.model('Archive', ArchiveSchema);
 
 module.exports = Archive;

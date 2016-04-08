@@ -3,8 +3,6 @@ const JSErrorModel = require('../models/jsError');
 const ArchiveModel = require('../models/archive');
 const _ = require('lodash');
 const moment = require('moment');
-const archiveMapReduce = require('./mapReduce/archive');
-const pageMapReduce = require('./mapReduce/page');
 const browserMapReduce = require('./mapReduce/browser');
 const osMapReduce = require('./mapReduce/os');
 const getJSErrorCondition = require('./utils/getJSErrorCondition');
@@ -225,7 +223,7 @@ function listOS (req, res) {
 
 function detail (req, res) {
   var id = req.params.id;
-  var query = ArchiveModel.findById(id).select('_id status latest earliest platform business url message jsErrors').populate('jsErrors', 'message url stack userAgent browser os date', null, {
+  var query = ArchiveModel.findById(id).select('_id orderId status latest earliest platform business url message jsErrors').populate('jsErrors', 'message url stack userAgent browser os date', null, {
     sort: {
       date: -1
     },
@@ -234,6 +232,7 @@ function detail (req, res) {
 
   query.exec().then(archiveModel => {
     var abstract = {
+      orderId: archiveModel.orderId,
       message: archiveModel.message,
       url: archiveModel.url,
       status: archiveModel.status,
@@ -251,7 +250,49 @@ function detail (req, res) {
       result: archiveModel.jsErrors,
       abstract
     }));
+  }, err => {
+    res.writeHead(500);
+    res.end(JSON.stringify({
+      status: -1,
+      message: err.message,
+      result: null
+    }));
   })
+}
+
+function detailUpdate (req, res) {
+  var id = req.params.id;
+  var params = req.body;
+  var queryArchive = ArchiveModel.where({ '_id': id }).update({ $set: params });
+  var queryJSErrors = JSErrorModel.where({ 'archiveId': id }).update({ $set: params });
+
+  Promise.all([queryArchive.exec(), queryJSErrors.exec()]).then(out => {
+    var isAllOk = (out[0].n !== out[0].ok && out[1].n !== out[1].ok);
+
+    if(isAllOk) {
+      res.end(JSON.stringify({
+        status: -1,
+        message: err.message,
+        result: null
+      }));
+      return false;
+    } else {
+      res.end(JSON.stringify({
+        status: 0,
+        message: 'ok',
+        result: params
+      }));
+    }
+
+  }, err => {
+    res.writeHead(500);
+    res.end(JSON.stringify({
+      status: -1,
+      message: err.message,
+      result: null
+    }));
+  });
+
 }
 
 module.exports = {
@@ -262,5 +303,6 @@ module.exports = {
   listPage: listPage,
   listBrowser: listBrowser,
   listOS: listOS,
-  detail: detail
+  detail: detail,
+  detailUpdate: detailUpdate
 };

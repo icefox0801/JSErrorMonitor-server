@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-var JSErrorSchema = new Schema({
+const JSErrorSchema = new Schema({
   message: {
     type: String,
     default: '',
@@ -141,6 +141,6 @@ var JSErrorSchema = new Schema({
 
 JSErrorSchema.set('toObject', { getters: true });
 
-var JSError = mongoose.model('JSError', JSErrorSchema);
+const JSError = mongoose.model('JSError', JSErrorSchema);
 
 module.exports = JSError;
