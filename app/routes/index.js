@@ -22,10 +22,10 @@ router.post('/api/error/list/os/', API.error.listOS);
 router.get('/api/error/detail/:id', API.error.detail);
 router.post('/api/error/detail/:id', API.error.detailUpdate);
 
-/* GET charts */
-router.get('/api/chart/error/trend', API.chart.errorTrend);
+/* chart routes */
+router.post('/api/chart/error/trend', API.chart.errorTrend);
 
-/* Error Collect API */
+/* error collect API */
 router.get('/collect/e.gif', API.collectError);
 
 module.exports = router;

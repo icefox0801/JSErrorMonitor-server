@@ -1,57 +1,27 @@
 'use strict';
-var JSError = require('../models/jsError');
-var moment = require('moment');
+const _ = require('lodash');
+const moment = require('moment');
+const JSErrorModel = require('../models/jsError');
+const queryCondition = require('./utils/queryCondition');
+const groupDates = require('./utils/groupDates');
 
 function errorTrend (req, res) {
+  var params = req.body;
 
-  try {
-    var query = JSError.aggregate([{
-      $match: {
-        date: {
-          $gte: new Date(moment().subtract(24, 'h'))
-        }
-      }
-    }, {
-      $project: {
-        _id: '$date',
-        hourAgo: {
-          $mod: [{
-            $subtract: [{
-              $add: [new Date().getUTCHours(), 24]
-            }, {
-              $hour: '$date'
-            }]
-          }, 24]
-        }
-      }
-    }, {
-      $group: {
-        _id: {
-          hourAgo: '$hourAgo'
-        },
-        count: {
-          $sum: 1
-        }
-      }
-    }, {
-      $sort: {
-        _id: 1
-      }
-    }]);
-
-  } catch (err) {
-    res.end(JSON.stringify({
-      status: -1,
-      message: err.message,
-      result: null
-    }));
-  }
+  var query = queryCondition(JSErrorModel.find().select('date'), params);
 
   query.exec().then(function (data) {
+    var now = moment();
+    var plots = groupDates(_.chain(data).map(jsError => jsError.date).value(), params.timeRange);
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
-      result: data
+      result: plots.list,
+      meta: {
+        start: plots.start,
+        interval: plots.interval,
+        format: plots.format
+      }
     }));
   }, function (err) {
     res.end(JSON.stringify({

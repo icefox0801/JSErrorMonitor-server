@@ -10,7 +10,7 @@ module.exports = function (params) {
   var browserRegex = buildRegex(params.browser || 'all');
   var osRegex = buildRegex(params.os || 'all');
   var businessRegex = buildRegex(params.business || 'all');
-  var statusRegex = buildRegex(params.status || 'all');
+  var statusRegex = buildRegex(params.status || 'open');
   var keywordRegex = new RegExp(params.keyword || '.*', 'i');
   var platformRegex = buildRegex(params.platform || 'PC');
   return {
