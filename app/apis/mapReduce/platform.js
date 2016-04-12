@@ -2,7 +2,7 @@
 
 function map() {
   emit({
-    family: this.browser.family
+    name: this.platform
   }, {
     count: 1
   });

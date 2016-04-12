@@ -2,6 +2,7 @@
 
 function map() {
   emit({
+    version: this.browser.version,
     family: this.browser.family
   }, {
     count: 1

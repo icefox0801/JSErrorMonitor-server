@@ -24,6 +24,10 @@ router.post('/api/error/detail/:id', API.error.detailUpdate);
 
 /* chart routes */
 router.post('/api/chart/error/trend', API.chart.errorTrend);
+router.post('/api/chart/error/browser', API.chart.errorBrowser);
+router.post('/api/chart/error/os', API.chart.errorOs);
+router.post('/api/chart/error/business', API.chart.errorBusiness);
+router.post('/api/chart/error/platform', API.chart.errorPlatform);
 
 /* error collect API */
 router.get('/collect/e.gif', API.collectError);

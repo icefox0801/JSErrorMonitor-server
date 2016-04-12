@@ -2,7 +2,6 @@
 
 function map() {
   emit({
-    version: this.os.version,
     family: this.os.family
   }, {
     count: 1
@@ -10,14 +9,8 @@ function map() {
 }
 
 function reduce(k, vals) {
-  var count = vals.length, min, max, v;
-
-  for(var i = 0; i < count; i++) {
-    v = vals[i].version;
-  }
-
   return {
-    count: count
+    count: vals.length
   };
 }
 

@@ -3,8 +3,8 @@ const JSErrorModel = require('../models/jsError');
 const ArchiveModel = require('../models/archive');
 const _ = require('lodash');
 const moment = require('moment');
-const browserMapReduce = require('./mapReduce/browser');
-const osMapReduce = require('./mapReduce/os');
+const allBrowsersMapReduce = require('./mapReduce/allBrowsers');
+const allOsMapReduce = require('./mapReduce/allOs');
 const getJSErrorCondition = require('./utils/getJSErrorCondition');
 const getArchiveCondition = require('./utils/getArchiveCondition');
 const queryCondition = require('./utils/queryCondition');
@@ -175,7 +175,7 @@ function listPage (req, res) {
 
 function listBrowser (req, res) {
   var queryOptions = getJSErrorCondition(req.body);
-  var promise = JSErrorModel.mapReduce(browserMapReduce({
+  var promise = JSErrorModel.mapReduce(allBrowsersMapReduce({
     query: queryOptions
   }));
 
@@ -199,7 +199,7 @@ function listBrowser (req, res) {
 
 function listOS (req, res) {
   var queryOptions = getJSErrorCondition(req.body);
-  var promise = JSErrorModel.mapReduce(osMapReduce({
+  var promise = JSErrorModel.mapReduce(allOsMapReduce({
     query: queryOptions
   }));
 
@@ -296,13 +296,13 @@ function detailUpdate (req, res) {
 }
 
 module.exports = {
-  listMost: listMost,
-  listLatest: listLatest,
-  listAll: listAll,
-  listArchive: listArchive,
-  listPage: listPage,
-  listBrowser: listBrowser,
-  listOS: listOS,
-  detail: detail,
-  detailUpdate: detailUpdate
+  listMost,
+  listLatest,
+  listAll,
+  listArchive,
+  listPage,
+  listBrowser,
+  listOS,
+  detail,
+  detailUpdate
 };
