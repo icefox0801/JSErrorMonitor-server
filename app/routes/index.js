@@ -20,6 +20,7 @@ router.post('/api/error/list/os/', API.error.listOS);
 
 /* error detail routes */
 router.get('/api/error/detail/:id', API.error.detail);
+router.get('/api/error/detail/:id/:skip', API.error.detailMore);
 router.post('/api/error/detail/:id', API.error.detailUpdate);
 
 /* chart routes */

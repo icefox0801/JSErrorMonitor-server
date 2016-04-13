@@ -25,8 +25,7 @@ function errorTrend (req, res) {
       result: plots.list,
       meta: {
         start: plots.start,
-        interval: plots.interval,
-        format: plots.format
+        interval: plots.interval
       }
     }));
   }, function (err) {

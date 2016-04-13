@@ -225,9 +225,9 @@ function detail (req, res) {
   var id = req.params.id;
   var query = ArchiveModel.findById(id).select('_id orderId status latest earliest platform business url message jsErrors').populate('jsErrors', 'message url stack userAgent browser os date', null, {
     sort: {
-      date: -1
+      date: 1
     },
-    limit: 10
+    limit: 5
   });
 
   query.exec().then(archiveModel => {
@@ -249,6 +249,33 @@ function detail (req, res) {
       message: 'ok',
       result: archiveModel.jsErrors,
       abstract
+    }));
+  }, err => {
+    res.writeHead(500);
+    res.end(JSON.stringify({
+      status: -1,
+      message: err.message,
+      result: null
+    }));
+  })
+}
+
+function detailMore (req, res) {
+  var id = req.params.id;
+  var skip = req.params.skip;
+  var query = ArchiveModel.findById(id).select('jsErrors').populate('jsErrors', 'message url stack userAgent browser os date', null, {
+    sort: {
+      date: 1
+    },
+    skip,
+    limit: 5
+  });
+
+  query.exec().then(archiveModel => {
+    res.end(JSON.stringify({
+      status: 0,
+      message: 'ok',
+      result: archiveModel.jsErrors
     }));
   }, err => {
     res.writeHead(500);
@@ -304,5 +331,6 @@ module.exports = {
   listBrowser,
   listOS,
   detail,
+  detailMore,
   detailUpdate
 };
