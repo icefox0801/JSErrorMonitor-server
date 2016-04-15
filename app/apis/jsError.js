@@ -229,8 +229,11 @@ function detail (req, res) {
     },
     limit: 5
   });
+  var queryCount = ArchiveModel.findById(id).select('jsErrors');
 
-  query.exec().then(archiveModel => {
+  Promise.all([query.exec(), queryCount.exec()]).then( out => {
+    var archiveModel = out[0];
+    var count = out[1].jsErrors.length;
     var abstract = {
       orderId: archiveModel.orderId,
       message: archiveModel.message,
@@ -243,7 +246,7 @@ function detail (req, res) {
     var os = _.chain(archiveModel.jsErrors).groupBy('os.family').keys();
     _.set(abstract, 'browsers', browsers);
     _.set(abstract, 'os', os);
-    _.set(abstract, 'count', archiveModel.jsErrors.length);
+    _.set(abstract, 'count', count);
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
@@ -257,7 +260,8 @@ function detail (req, res) {
       message: err.message,
       result: null
     }));
-  })
+  });
+
 }
 
 function detailMore (req, res) {
@@ -291,12 +295,12 @@ function detailUpdate (req, res) {
   var id = req.params.id;
   var params = req.body;
   var queryArchive = ArchiveModel.where({ '_id': id }).update({ $set: params });
-  var queryJSErrors = JSErrorModel.where({ 'archiveId': id }).update({ $set: params });
+  var queryJSErrors = JSErrorModel.where({ 'archiveId': id }).setOptions({ multi: true }).update({ $set: params } );
 
   Promise.all([queryArchive.exec(), queryJSErrors.exec()]).then(out => {
-    var isAllOk = (out[0].n !== out[0].ok && out[1].n !== out[1].ok);
+    var notAllOk = (out[0].n !== out[0].ok && out[1].n !== out[1].ok);
 
-    if(isAllOk) {
+    if(notAllOk) {
       res.end(JSON.stringify({
         status: -1,
         message: err.message,
