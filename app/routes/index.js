@@ -18,10 +18,10 @@ router.post('/api/error/list/page/:page', API.error.listPage);
 router.post('/api/error/list/browser/', API.error.listBrowser);
 router.post('/api/error/list/os/', API.error.listOS);
 
-/* error detail routes */
-router.get('/api/error/detail/:id', API.error.detail);
-router.get('/api/error/detail/:id/:skip', API.error.detailMore);
-router.post('/api/error/detail/:id', API.error.detailUpdate);
+/* archive routes */
+router.get('/api/archive/detail/:id', API.archive.detail);
+router.get('/api/archive/detail/:id/:skip', API.archive.detailMore);
+router.post('/api/archive/update/:id', API.archive.update);
 
 /* chart routes */
 router.post('/api/chart/error/trend', API.chart.errorTrend);

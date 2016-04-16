@@ -71,7 +71,7 @@ app.use(function (err, req, res, next) {
 // Connect to mongodb
 var connect = function () {
 
-  var url = 'mongodb://127.0.0.1:27017/pws';
+  var url = 'mongodb://127.0.0.1:27017/jsError';
   var options = {
     server: {
       socketOptions: {
