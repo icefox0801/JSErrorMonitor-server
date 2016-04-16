@@ -39,12 +39,23 @@ function errorTrend (req, res) {
 
 function errorBrowser (req, res) {
   var queryOptions = getJSErrorCondition(req.body);
-  var promise = JSErrorModel.mapReduce(browserMapReduce({
-    query: queryOptions
-  }));
+  var query = JSErrorModel.aggregate([{
+    $match: queryOptions
+  }, {
+    $project: {
+      _id: '$browser.family'
+    }
+  }, {
+    $group: {
+      _id: '$_id',
+      count: {
+        $sum: 1
+      }
+    }
+  }]);
 
-  promise.then(data => {
-    var result = _.chain(data).map(browser => ({ name: browser._id.family, count: browser.value.count })).value();
+  query.exec().then(data => {
+    var result = _.chain(data).map(browser => ({ name: browser._id, count: browser.count })).value();
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
@@ -62,12 +73,23 @@ function errorBrowser (req, res) {
 
 function errorOs (req, res) {
   var queryOptions = getJSErrorCondition(req.body);
-  var promise = JSErrorModel.mapReduce(osMapReduce({
-    query: queryOptions
-  }));
+  var query = JSErrorModel.aggregate([{
+    $match: queryOptions
+  }, {
+    $project: {
+      _id: '$os.family'
+    }
+  }, {
+    $group: {
+      _id: '$_id',
+      count: {
+        $sum: 1
+      }
+    }
+  }]);
 
-  promise.then(data => {
-    var result = _.chain(data).map(os => ({ name: os._id.family, count: os.value.count })).value();
+  query.exec().then(data => {
+    var result = _.chain(data).map(os => ({ name: os._id, count: os.count })).value();
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
@@ -85,12 +107,23 @@ function errorOs (req, res) {
 
 function errorBusiness (req, res) {
   var queryOptions = getJSErrorCondition(req.body);
-  var promise = JSErrorModel.mapReduce(businessMapReduce({
-    query: queryOptions
-  }));
+  var query = JSErrorModel.aggregate([{
+    $match: queryOptions
+  }, {
+    $project: {
+      _id: '$business'
+    }
+  }, {
+    $group: {
+      _id: '$_id',
+      count: {
+        $sum: 1
+      }
+    }
+  }]);
 
-  promise.then(data => {
-    var result = _.chain(data).map(business => ({ name: business._id.name, count: business.value.count })).value();
+  query.exec().then(data => {
+    var result = _.chain(data).map(business => ({ name: business._id, count: business.count })).value();
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
@@ -108,12 +141,23 @@ function errorBusiness (req, res) {
 
 function errorPlatform (req, res) {
   var queryOptions = getJSErrorCondition(req.body);
-  var promise = JSErrorModel.mapReduce(platformMapReduce({
-    query: queryOptions
-  }));
+  var query = JSErrorModel.aggregate([{
+    $match: queryOptions
+  }, {
+    $project: {
+      _id: '$platform'
+    }
+  }, {
+    $group: {
+      _id: '$_id',
+      count: {
+        $sum: 1
+      }
+    }
+  }]);
 
-  promise.then(data => {
-    var result = _.chain(data).map(platform => ({ name: platform._id.name, count: platform.value.count })).value();
+  query.exec().then(data => {
+    var result = _.chain(data).map(platform => ({ name: platform._id, count: platform.count })).value();
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',

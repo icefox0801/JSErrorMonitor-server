@@ -175,11 +175,26 @@ function listPage (req, res) {
 
 function listBrowser (req, res) {
   var queryOptions = getJSErrorCondition(req.body);
-  var promise = JSErrorModel.mapReduce(allBrowsersMapReduce({
-    query: queryOptions
-  }));
+  var query = JSErrorModel.aggregate([{
+    $match: queryOptions
+  }, {
+    $project: {
+      family: '$browser.family',
+      version: '$browser.version'
+    }
+  }, {
+    $group: {
+      _id: {
+        family: '$family',
+        version: '$version'
+      },
+      count: {
+        $sum: 1
+      }
+    }
+  }]);
 
-  promise.then(data => {
+  query.exec().then(data => {
     var result = groupResults(data);
     var meta = { count: result.length };
     res.end(JSON.stringify({
@@ -199,11 +214,26 @@ function listBrowser (req, res) {
 
 function listOS (req, res) {
   var queryOptions = getJSErrorCondition(req.body);
-  var promise = JSErrorModel.mapReduce(allOsMapReduce({
-    query: queryOptions
-  }));
+  var query = JSErrorModel.aggregate([{
+    $match: queryOptions
+  }, {
+    $project: {
+      family: '$os.family',
+      version: '$os.version'
+    }
+  }, {
+    $group: {
+      _id: {
+        family: '$family',
+        version: '$version'
+      },
+      count: {
+        $sum: 1
+      }
+    }
+  }]);
 
-  promise.then(data => {
+  query.exec().then(data => {
     var result = groupResults(data);
     var meta = { count: result.length };
     res.end(JSON.stringify({

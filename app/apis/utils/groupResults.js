@@ -6,7 +6,7 @@ module.exports = function (data) {
   var resultMap = _.chain(data).map(item => ({
     family: item._id.family,
     version: item._id.version,
-    count: item.value.count
+    count: item.count
   })).groupBy('family').value();
 
   _.each(resultMap, (value, key) => {

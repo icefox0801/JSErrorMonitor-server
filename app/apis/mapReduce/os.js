@@ -1,17 +1,11 @@
 'use strict';
 
 function map() {
-  emit({
-    family: this.os.family
-  }, {
-    count: 1
-  });
+  emit(this.os.family, 1);
 }
 
 function reduce(k, vals) {
-  return {
-    count: vals.length
-  };
+  return vals.length;
 }
 
 module.exports = function (options) {
