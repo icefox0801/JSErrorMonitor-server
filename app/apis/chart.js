@@ -5,11 +5,6 @@ const JSErrorModel = require('../models/jsError');
 const queryCondition = require('./utils/queryCondition');
 const getJSErrorCondition = require('./utils/getJSErrorCondition');
 const groupDates = require('./utils/groupDates');
-const browserMapReduce = require('./mapReduce/browser');
-const osMapReduce = require('./mapReduce/os');
-const businessMapReduce = require('./mapReduce/business');
-const platformMapReduce = require('./mapReduce/platform');
-
 
 function errorTrend (req, res) {
   var params = req.body;

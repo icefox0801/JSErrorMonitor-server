@@ -3,8 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node --harmory ./bin/www",
-    "debug": "nodemon --nolazy --debug --harmony ./bin/www"
+    "start": "node --harmory ./bin/www &",
+    "debug": "node-inspector --web-port=8086 && nodemon --nolazy --debug --harmony ./bin/www &",
+    "db": "sudo mongod --fork --logpath \"./db.log\""
   },
   "dependencies": {
     "body-parser": "^1.13.3",
