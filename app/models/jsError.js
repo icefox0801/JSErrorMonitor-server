@@ -141,6 +141,4 @@ const JSErrorSchema = new Schema({
 
 JSErrorSchema.set('toObject', { getters: true });
 
-const JSError = mongoose.model('JSError', JSErrorSchema);
-
-module.exports = JSError;
+module.exports = mongoose.model('JSError', JSErrorSchema);

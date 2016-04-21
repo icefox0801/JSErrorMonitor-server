@@ -6,14 +6,45 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const stacky = require('stacky');
-
 const mongoose = require('mongoose');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const session = require('express-session');
 
 const routes = require('./routes/index');
 
 const app = express();
 
 const env = process.env.NODE_ENV || 'development';
+
+const authenticateMiddleWare = function (req, res ,next) {
+
+  passport.authenticate('local', { session: false }, function(err, user, info) {
+    if (err) {
+      res.status(500);
+      res.end(JSON.stringify({
+        status: -1,
+        message: err.message,
+        result: null
+      }));
+      return false;
+    }
+
+    if (!user) {
+      res.status(401);
+      res.end(JSON.stringify({
+        status: -1,
+        message: 'username or password is invalid!',
+        result: null
+      }));
+      return false;
+    }
+
+    next();
+
+  });
+};
+
 app.locals.ENV = env;
 app.locals.ENV_DEVELOPMENT = env == 'development';
 
@@ -29,15 +60,39 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 app.use(cookieParser());
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
+
+app.use('error', authenticateMiddleWare);
+
+// passport config
+var Account = require('./models/account');
+passport.use(new LocalStrategy(Account.authenticate()));
+passport.serializeUser(Account.serializeUser());
+passport.deserializeUser(Account.deserializeUser());
 
 /// catch 404 and forward to error handler
 app.use(function (req, res, next) {
   var err = new Error('Not Found');
   err.status = 404;
-  next(err);
+
+  res.end(JSON.stringify({
+    status: -1,
+    message: err.message,
+    result: null
+  }));
+
 });
 
 /// error handlers

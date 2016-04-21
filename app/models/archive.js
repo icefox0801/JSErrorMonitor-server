@@ -52,6 +52,4 @@ ArchiveSchema.plugin(autoIncrement.plugin, {
   incrementBy: 1
 });
 
-const Archive = mongoose.model('Archive', ArchiveSchema);
-
-module.exports = Archive;
+module.exports = mongoose.model('Archive', ArchiveSchema);

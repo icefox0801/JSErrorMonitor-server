@@ -1,6 +1,7 @@
 "use strict";
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
 
 const API = require('../apis');
 
@@ -8,6 +9,12 @@ const API = require('../apis');
 router.get('/', function(req, res) {
   res.end('index');
 });
+
+/* account routes */
+router.get('/api/account/authorized', API.account.authorized);
+router.get('/api/account/logout', API.account.logout);
+router.post('/api/account/login', API.account.login);
+router.post('/api/account/register', API.account.register);
 
 /* error list routes */
 router.post('/api/error/list/most', API.error.listMost);

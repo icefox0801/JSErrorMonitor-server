@@ -26,7 +26,7 @@ module.exports = function (dateList, timeRange) {
   var interval = map[timeRange].interval || 1;
   var length = timeRange * 60 * 60 * 1000 / interval;
   var countMap =  _.chain(dateList).map(date => moment(date).diff(now, 'ms')).countBy(ms => Math.floor(ms / interval)  + length).value();
-  var countList = _.fill(new Array(length + 1), 0);
+  var countList = _.fill(new Array(length), 0);
   _.each(countMap, (value, key) => {
     countList[key] = value;
   });
