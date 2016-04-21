@@ -43,17 +43,13 @@ const authenticateMiddleWare = function (req, res ,next) {
     next();
 
   });
+
 };
 
 app.locals.ENV = env;
 app.locals.ENV_DEVELOPMENT = env == 'development';
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
-
 //app.use(favicon(__dirname + '/public/img/favicon.ico'));
-
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -74,7 +70,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 
-app.use('error', authenticateMiddleWare);
+app.use('/', authenticateMiddleWare);
 
 // passport config
 var Account = require('./models/account');

@@ -2,13 +2,46 @@
 const passport = require('passport');
 const AccountModel = require('../models/account');
 
-function authorized (req, res) {
-  if(req.user) res.end('ok');
+function authenticated (req, res) {
 
-  res.end('fail');
+  passport.authenticate('local', function(err, user, info) {
+
+    if (err) {
+      res.status(500);
+      res.end(JSON.stringify({
+        status: -1,
+        message: err.message,
+        result: {
+          username: ''
+        }
+      }));
+      return false;
+    }
+
+    if (!user) {
+      res.end(JSON.stringify({
+        status: -1,
+        message: 'not authenticated!',
+        result: {
+          username: ''
+        }
+      }));
+      return false;
+    }
+
+    res.end(JSON.stringify({
+      status: 0,
+      message: 'ok',
+      result: {
+        username: req.user.username
+      }
+    }));
+
+  })(req, res);
+
 }
 
-function login (req, res, next) {
+function login (req, res) {
 
   passport.authenticate('local', function(err, user, info) {
 
@@ -54,11 +87,11 @@ function login (req, res, next) {
 
     });
 
-  })(req, res, next);
+  })(req, res);
 
 }
 
-function logout () {
+function logout (req, res) {
   req.logout();
 
   res.end(JSON.stringify({
@@ -97,7 +130,7 @@ function register (req, res) {
 }
 
 module.exports = {
-  authorized,
+  authenticated,
   login,
   logout,
   register
