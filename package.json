@@ -8,7 +8,10 @@
   "scripts": {
     "start": "node ./bin/www",
     "debug": "nodemon --nolazy --debug --harmony ./bin/www",
-    "db": "sudo mongod --fork --logpath \"./db.log\""
+    "db": "sudo mongod --fork --logpath \"./db.log\"",
+    "release:major": "npm version major && npm publish && git push --follow-tags",
+    "release:minor": "npm version minor && npm publish && git push --follow-tags",
+    "release:patch": "npm version patch && npm publish && git push --follow-tags"
   },
   "dependencies": {
     "body-parser": "^1.13.3",
