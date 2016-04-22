@@ -19,7 +19,7 @@ const env = process.env.NODE_ENV || 'development';
 
 const authenticateMiddleWare = function (req, res ,next) {
 
-  passport.authenticate('local', { session: false }, function(err, user, info) {
+  passport.authenticate('local', function(err, user, info) {
     if (err) {
       res.status(500);
       res.end(JSON.stringify({
@@ -53,7 +53,7 @@ app.locals.ENV_DEVELOPMENT = env == 'development';
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
-  extended: true
+  extended: false
 }));
 app.use(cookieParser());
 app.use(session({

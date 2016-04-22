@@ -2,33 +2,9 @@
 const passport = require('passport');
 const AccountModel = require('../models/account');
 
-function authenticated (req, res) {
+function authenticated (req, res, next) {
 
-  passport.authenticate('local', function(err, user, info) {
-
-    if (err) {
-      res.status(500);
-      res.end(JSON.stringify({
-        status: -1,
-        message: err.message,
-        result: {
-          username: ''
-        }
-      }));
-      return false;
-    }
-
-    if (!user) {
-      res.end(JSON.stringify({
-        status: -1,
-        message: 'not authenticated!',
-        result: {
-          username: ''
-        }
-      }));
-      return false;
-    }
-
+  if(req.isAuthenticated()) {
     res.end(JSON.stringify({
       status: 0,
       message: 'ok',
@@ -36,8 +12,15 @@ function authenticated (req, res) {
         username: req.user.username
       }
     }));
-
-  })(req, res);
+  } else {
+    res.end(JSON.stringify({
+      status: -1,
+      message: 'not authenticated!',
+      result: {
+        username: ''
+      }
+    }));
+  }
 
 }
 
