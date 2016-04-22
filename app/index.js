@@ -19,30 +19,16 @@ const env = process.env.NODE_ENV || 'development';
 
 const authenticateMiddleWare = function (req, res ,next) {
 
-  passport.authenticate('local', function(err, user, info) {
-    if (err) {
-      res.status(500);
-      res.end(JSON.stringify({
-        status: -1,
-        message: err.message,
-        result: null
-      }));
-      return false;
-    }
-
-    if (!user) {
-      res.status(401);
-      res.end(JSON.stringify({
-        status: -1,
-        message: 'username or password is invalid!',
-        result: null
-      }));
-      return false;
-    }
-
+  if(req.isAuthenticated()) {
     next();
-
-  });
+  } else {
+    res.status(401);
+    res.end(JSON.stringify({
+      status: -1,
+      message: 'not authenticated!',
+      result: null
+    }));
+  }
 
 };
 
@@ -68,9 +54,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
+app.use('/api/error/', authenticateMiddleWare);
+app.use('/api/archive/', authenticateMiddleWare);
+app.use('/api/chart/', authenticateMiddleWare);
 
-app.use('/', authenticateMiddleWare);
+app.use('/', routes);
 
 // passport config
 var Account = require('./models/account');
