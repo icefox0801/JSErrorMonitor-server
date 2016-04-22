@@ -33,17 +33,20 @@ function login (req, res) {
       res.end(JSON.stringify({
         status: -1,
         message: err.message,
-        result: null
+        result: {
+          username: ''
+        }
       }));
       return false;
     }
 
     if (!user) {
-      res.status(401);
       res.end(JSON.stringify({
         status: -1,
         message: 'username or password is invalid!',
-        result: null
+        result: {
+          username: ''
+        }
       }));
       return false;
     }
@@ -51,11 +54,12 @@ function login (req, res) {
     req.login(user, function(err) {
 
       if (err) {
-        res.status(401);
         res.end(JSON.stringify({
           status: -1,
           message: err.message,
-          result: null
+          result: {
+            username: ''
+          }
         }));
         return false;
       }
