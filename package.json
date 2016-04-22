@@ -1,7 +1,7 @@
 {
   "name": "JSErrorMonitor-server",
   "description": "JSErrorMonitor的API服务",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "config": {
     "port": "8088"
   },
