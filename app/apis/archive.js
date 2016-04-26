@@ -50,7 +50,7 @@ function detail (req, res) {
 
 function detailMore (req, res) {
   var id = req.params.id;
-  var skip = req.params.skip;
+  var skip = parseInt(req.params.skip, 10);
   var query = ArchiveModel.findById(id).select('jsErrors').populate('jsErrors', 'message url stack userAgent browser os date', null, {
     sort: {
       date: 1
