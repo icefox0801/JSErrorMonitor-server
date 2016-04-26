@@ -12,7 +12,7 @@ JSErrorMonitor的API服务
 
 ## 命令
 1. 通过`npm start`在`8088`端口启动服务
-2. 通过`npm run debug`以debug模式启动服务
+2. 通过`npm run debug`以`debug`模式启动服务
 
 ## 调试
 调试可通过[node-inspector](https://github.com/node-inspector/node-inspector)，可通过`npm install node-inspector -g`安装
